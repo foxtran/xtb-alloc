@@ -14,6 +14,9 @@ static ALLOCATED: Lazy<Mutex<HashMap<DataPtr, usize>>> = Lazy::new(|| Mutex::new
 static FREED: Lazy<Mutex<HashMap<usize, Vec<DataPtr>>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 
 pub fn get_allocated(block_size: usize) -> Option<*mut c_void> {
+    if cfg!(debug_assertions) {
+        println!("Looking for block with size {}", block_size);
+    }
     let mut freed = FREED.lock().unwrap();
     let mut allocated = ALLOCATED.lock().unwrap();
 
@@ -33,6 +36,9 @@ pub fn move_to_freed(data: *mut c_void) {
     let mut allocated = ALLOCATED.lock().unwrap();
     if let Some(block_size) = allocated.remove(&data_ptr) {
         drop(allocated);
+        if cfg!(debug_assertions) {
+            println!("Freeing block with size {}", block_size);
+        }
 
         let mut freed = FREED.lock().unwrap();
         freed.entry(block_size).or_default().push(data_ptr);
@@ -40,6 +46,9 @@ pub fn move_to_freed(data: *mut c_void) {
 }
 
 pub fn add_to_allocated(data: *mut c_void, block_size: usize) {
+    if cfg!(debug_assertions) {
+        println!("Add block with size {}", block_size);
+    }
     let data_ptr = DataPtr(data);
     let mut allocated = ALLOCATED.lock().unwrap();
     allocated.insert(data_ptr, block_size);
