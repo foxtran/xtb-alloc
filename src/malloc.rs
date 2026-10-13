@@ -5,12 +5,12 @@ use std::sync::LazyLock;
 type MallocFn = unsafe extern "C" fn(usize) -> *mut c_void;
 
 pub static REAL_MALLOC: LazyLock<MallocFn> = LazyLock::new(|| unsafe {
-    let sym = dlsym(RTLD_NEXT, b"malloc\0".as_ptr() as *const _);
+    let sym = dlsym(RTLD_NEXT, c"malloc".as_ptr());
     std::mem::transmute(sym)
 });
 
 #[unsafe(no_mangle)]
-pub extern "C" fn malloc(size: usize) -> *mut c_void {
+pub unsafe extern "C" fn malloc(size: usize) -> *mut c_void {
     if let Some(data) = crate::storage::get_allocated(size) {
         return data;
     }

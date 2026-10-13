@@ -20,11 +20,11 @@ pub fn get_allocated(block_size: usize) -> Option<*mut c_void> {
     let mut freed = FREED.lock().unwrap();
     let mut allocated = ALLOCATED.lock().unwrap();
 
-    if let Some(vec) = freed.get_mut(&block_size) {
-        if let Some(ptr) = vec.pop() {
-            allocated.insert(ptr, block_size);
-            return Some(ptr.0);
-        }
+    if let Some(vec) = freed.get_mut(&block_size)
+        && let Some(ptr) = vec.pop()
+    {
+        allocated.insert(ptr, block_size);
+        return Some(ptr.0);
     }
 
     None
